@@ -19,6 +19,11 @@ session = Session()
 # Определение базовой модели
 Base = declarative_base()
 
+# Определение промежуточной таблицы для связи между таблицами "users" и "groups"
+user_activity_table = Table('user_activity', Base.metadata,
+    Column('user_id', Integer, ForeignKey('user.id', ondelete='CASCADE')),
+    Column('activity_id', Integer, ForeignKey('activity.id', ondelete='CASCADE'))
+)
 
 # Определение класса-модели для таблицы
 class User(Base):
@@ -27,7 +32,8 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
     chat_id = Column(Integer)
-    activity = relationship('Activity', 'user')
+    activities = relationship("Activity", secondary=user_activity_table, back_populates="users", cascade='all, delete')
+
 
 
 class Activity(Base):
@@ -35,25 +41,22 @@ class Activity(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
-    user_id = Column(Integer, ForeignKey('user.id'))
+    user_id = Column(Integer, ForeignKey('user.id',ondelete='CASCADE'))
+    users = relationship("User", secondary=user_activity_table, back_populates="activities")  # Связь "многие ко многим"
+
 
 
 class Entry(Base):
     __tablename__ = 'entry'
 
     id = Column(Integer, primary_key=True)
-    text = Column(String(100))
+    activity_id = Column(Integer, ForeignKey('activity.id'))
     amount = Column(Integer)
     description = Column(String(300))
     date_added = Column(Date, default=date.today())
     text_notification = Column(String(300))
 
 
-# Определение промежуточной таблицы для связи между таблицами "users" и "groups"
-user_activity_table = Table('user_activity', Base.metadata,
-    Column('user_id', Integer, ForeignKey('user.id')),
-    Column('activity_id', Integer, ForeignKey('activity.id'))
-)
 
 
 # # Создание таблиц
