@@ -31,7 +31,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
-    chat_id = Column(Integer)
+    chat_id = Column(String(50))
     activities = relationship("Activity", secondary=user_activity_table, back_populates="users", cascade='all, delete')
 
 
@@ -41,7 +41,7 @@ class Activity(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
-    user_id = Column(Integer, ForeignKey('user.id',ondelete='CASCADE'))
+    user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
     users = relationship("User", secondary=user_activity_table, back_populates="activities")  # Связь "многие ко многим"
 
 
@@ -50,11 +50,11 @@ class Entry(Base):
     __tablename__ = 'entry'
 
     id = Column(Integer, primary_key=True)
-    activity_id = Column(Integer, ForeignKey('activity.id'))
+    activity_id = Column(Integer, ForeignKey('activity.id', ondelete='CASCADE'))
     amount = Column(Integer)
-    description = Column(String(300))
+    description = Column(String(300), default='')
     date_added = Column(Date, default=date.today())
-    text_notification = Column(String(300))
+    # text_notification = Column(String(300))
 
 
 
