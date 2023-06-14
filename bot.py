@@ -2,47 +2,23 @@ import telebot
 from config import BOT_TOKEN, MESSAGE_TEXT, BUTTON_TEXT
 from models.user import create_user
 from models.activity import formation_list_activity, add_activity
-from keyboards import make_keyboard_start, make_keyboard_main_menu, make_keyboard_list_activity
+from keyboards import make_keyboard_start, make_keyboard_main_menu,\
+    make_keyboard_list_activity, make_keyboard_skip_amount, make_keyboard_skip_description
+from models.entry import add_row
+from data_structares import Row, RowFactory
 
-from dataclasses import dataclass
 from datetime import date
 from keyboa import Keyboa
-
+import re
 
 message_id_for_edit = {}
-@dataclass
-class Row:
-    date_added: date
-    activity: str
-    amount: int
-    description: str
-    # text_notification: str
-
-
-class RowFactory:
-    def __init__(self):
-        self.data = {}
-
-    def set_date_added(self, date_added: date):
-        self.data['date_added'] = date_added
-
-    def set_activity(self, activity: str):
-        self.data['activity'] = activity
-
-    def set_amount(self, amount: int):
-        self.data['amount'] = amount
-
-    def set_description(self, description: str):
-        self.data['description'] = description
-
-    def create_row(self) -> Row:
-        return Row(**self.data)
-
+user_row = {}
 
 
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode='HTML')
 
 
+#Приветственное сообщение
 @bot.message_handler(commands=['start'])
 def welcome(message):
     bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}!!!\n'+MESSAGE_TEXT['start'],
@@ -51,22 +27,27 @@ def welcome(message):
     create_user(message.from_user.first_name, message.chat.id)
 
 
+#Открытие главного меню
 @bot.message_handler(content_types=['text'], regexp=BUTTON_TEXT['start'])
-def start_button(message):
+def go_main_menu(message):
     bot.send_message(message.chat.id, MESSAGE_TEXT['main_menu'], reply_markup=make_keyboard_main_menu())
 
 
+#Возвращение в главное меню через кнопку отмены
 @bot.message_handler(content_types=['text'], regexp=BUTTON_TEXT['cancel'])
-def cancel_button(message):
+def return_main_menu(message):
     bot.send_message(message.chat.id, MESSAGE_TEXT['main_menu'], reply_markup=make_keyboard_main_menu())
 
 
+#Обработка нажатия кнопки "Добавить запись"
 @bot.message_handler(content_types=['text'], regexp=BUTTON_TEXT['add_row'])
-def one_button(message):
+def add_row_button(message):
+    bot.delete_message(message.chat.id, message.id)
     keyboard = make_keyboard_list_activity(message.chat.id)
-    bot.send_message(message.chat.id, 'Выбери', reply_markup=keyboard())
+    bot.send_message(message.chat.id, 'Выбери или создай активность', reply_markup=keyboard())
 
 
+#Обработка нажатия кнопки "+" добавлене активности
 @bot.callback_query_handler(func=lambda call: call.data == 'activity=add_activity')
 def callback_inline(call):
     answer = bot.send_message(call.message.chat.id, 'отправь название новой активности следующим сообщением')
@@ -75,6 +56,7 @@ def callback_inline(call):
     bot.register_next_step_handler(call.message, get_name_new_activity)
 
 
+#Получение имени новой активности от пользователя из сообщения
 def get_name_new_activity(message):
     chat_id = message.chat.id
     add_activity(chat_id, name_activity=message.text)
@@ -82,10 +64,87 @@ def get_name_new_activity(message):
     keyboard = make_keyboard_list_activity(chat_id)
     bot.delete_message(chat_id, message.id)
     bot.delete_message(chat_id, message_id_for_edit['name_activity'])
-    bot.edit_message_text(text='Выбери:', message_id=message_id_for_edit['list_activity'],
+    bot.edit_message_text(text='Выбери или создай активность', message_id=message_id_for_edit['list_activity'],
                           chat_id=message.chat.id,
                           reply_markup=keyboard())
 
+
+#Обработка выбора активности
+@bot.callback_query_handler(func=lambda call: re.match(r'activity=[0-9]+',call.data))
+def callback_inline(call):
+    chat_id = call.message.chat.id
+    user_row[chat_id] = RowFactory()
+    activity_id = call.data.split('=')[1]
+    message_id_for_edit['list_activity'] = call.message.id
+
+    user_row[chat_id].set_activity_id(activity_id)
+    bot.delete_message(chat_id, message_id_for_edit['list_activity'])
+    keyboard = make_keyboard_skip_amount()
+    bot.send_message(chat_id, 'Можешь указать количественную характеристику', reply_markup=keyboard())
+
+
+#Получаем количественную характеристику
+@bot.callback_query_handler(func=lambda call: re.match(r'amount=continue',call.data))
+def callback_inline(call):
+    bot.delete_message(call.message.chat.id, call.message.id)
+    answer = bot.send_message(call.message.chat.id, 'Отправь количество следующим сообщением')
+    message_id_for_edit['amount_continue'] = answer.id
+    bot.register_next_step_handler(call.message, get_amount)
+
+
+#Получение количественной характеристики от пользователя из сообщения
+def get_amount(message):
+    user_row[message.chat.id].set_amount(int(message.text))
+    bot.delete_message(chat_id=message.chat.id, message_id=message_id_for_edit['amount_continue'])
+    bot.delete_message(message.chat.id, message.id)
+
+    keyboard = make_keyboard_skip_description()
+    answer = bot.send_message(message.chat.id, 'Можешь добавить описание', reply_markup=keyboard())
+    message_id_for_edit['description_cskip'] = answer.id
+
+
+#Пропускаем ввод количественной характеристики
+@bot.callback_query_handler(func=lambda call: re.match(r'amount=skip',call.data))
+def callback_inline(call):
+    bot.delete_message(call.message.chat.id, call.message.id)
+    user_row[message.chat.id].set_amount(0)
+    keyboard = make_keyboard_skip_description()
+    bot.send_message(call.message.chat.id, 'Можешь добавить описание', reply_markup=keyboard())
+
+
+
+#Получение описания
+@bot.callback_query_handler(func=lambda call: re.match(r'description=continue',call.data))
+def callback_inline(call):
+    answer = bot.send_message(call.message.chat.id, 'Отправь описание следующим сообщением')
+    message_id_for_edit['description_cskip'] = answer.id
+
+    bot.delete_message(call.message.chat.id, call.message.id)
+    bot.register_next_step_handler(call.message, get_description)
+
+
+#Получение описания от пользователя из сообщения
+def get_description(message):
+    user_row[message.chat.id].set_description(message.text)
+    user_row[message.chat.id].set_date_added(date.today())
+    bot.delete_message(message.chat.id, message.id)
+    bot.delete_message(message.chat.id, message_id_for_edit['description_cskip'])
+    finish_step_add_row(user_row[message.chat.id])
+
+
+#Обрабатываем пропускание описания
+@bot.callback_query_handler(func=lambda call: re.match(r'description=skip',call.data))
+def callback_inline(call):
+    bot.delete_message(call.message.chat.id, call.message.id)
+    user_row[call.message.chat.id].set_description('-')
+    user_row[call.message.chat.id].set_date_added(date.today())
+    finish_step_add_row(user_row[call.message.chat.id])
+
+
+#Этап создания объекта Row и записи данных в БД
+def finish_step_add_row(row_maker):
+    row = row_maker.create_row()
+    add_row(row)
 
 if __name__ == '__main__':
     bot.infinity_polling(none_stop=True)

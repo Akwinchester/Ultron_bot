@@ -32,3 +32,15 @@ def make_keyboard_list_activity(chat_id):
     items.append(('+', 'add_activity'))
     keyboard = Keyboa(items=items, items_in_row=2, front_marker='activity=')
     return keyboard
+
+
+def make_keyboard_skip_amount():
+    items=[('Пропустить', 'skip'), ('Указать', 'continue')]
+    keyboard = Keyboa(items=items, items_in_row=2, front_marker='amount=')
+    return keyboard
+
+
+def make_keyboard_skip_description():
+    items=[('Пропустить', 'skip'), ('Указать', 'continue')]
+    keyboard = Keyboa(items=items, items_in_row=2, front_marker='description=')
+    return keyboard

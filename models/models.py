@@ -9,21 +9,21 @@ from datetime import date
 engine = create_engine(f'mysql+mysqlconnector://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}')
 
 
-
 # Создание сессии
 Session = sessionmaker(bind=engine)
 session = Session()
 
 
-
 # Определение базовой модели
 Base = declarative_base()
+
 
 # Определение промежуточной таблицы для связи между таблицами "users" и "groups"
 user_activity_table = Table('user_activity', Base.metadata,
     Column('user_id', Integer, ForeignKey('user.id', ondelete='CASCADE')),
     Column('activity_id', Integer, ForeignKey('activity.id', ondelete='CASCADE'))
 )
+
 
 # Определение класса-модели для таблицы
 class User(Base):
@@ -35,7 +35,6 @@ class User(Base):
     activities = relationship("Activity", secondary=user_activity_table, back_populates="users", cascade='all, delete')
 
 
-
 class Activity(Base):
     __tablename__ = 'activity'
 
@@ -43,7 +42,6 @@ class Activity(Base):
     name = Column(String(50))
     user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
     users = relationship("User", secondary=user_activity_table, back_populates="activities")  # Связь "многие ко многим"
-
 
 
 class Entry(Base):
@@ -55,9 +53,3 @@ class Entry(Base):
     description = Column(String(300), default='')
     date_added = Column(Date, default=date.today())
     # text_notification = Column(String(300))
-
-
-
-
-# # Создание таблиц
-# Base.metadata.create_all(engine)
