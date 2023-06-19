@@ -27,3 +27,20 @@ def get_name_activity(activity_id):
     activity_name = session.query(Activity).filter_by(id = activity_id).first().name
     session.close()
     return activity_name
+
+
+#Удаление категории
+def delete_activity(activity_id):
+    try:
+        activity = session.query(Activity).get(activity_id)
+
+        if activity:
+            session.delete(activity)
+            session.commit()
+
+    except SQLAlchemyError as e:
+        print("Ошибка при удалении записи:", str(e))
+        session.rollback()
+
+    finally:
+        session.close()

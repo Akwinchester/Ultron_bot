@@ -44,3 +44,15 @@ def make_keyboard_skip_description():
     items=[('Пропустить', 'skip'), ('Указать', 'continue')]
     keyboard = Keyboa(items=items, items_in_row=2, front_marker='description=')
     return keyboard
+
+
+def make_keyboard_setting_activity(activity_id):
+    items = [('Удалить активность', 'delete'), ('Уведомления', 'push'), ('Список активностей','list_activity'), ('Продолжить', 'continue')]
+    keyboard = Keyboa(items=items, items_in_row=2, front_marker=f'activity_{activity_id}=')
+    return keyboard
+
+
+def make_keyboard_setting_push():
+    items = [('Текст уведомления', 'text'), ('Получатели', 'addresses'), ('Список активностей', 'save')]
+    keyboard = Keyboa(items=items, items_in_row=2, front_marker='push=')
+    return keyboard
