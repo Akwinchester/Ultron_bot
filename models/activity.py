@@ -114,4 +114,4 @@ def get_notification_text(activity_id):
     if activity.notification_text  and activity.notification_text != '':
         return activity.notification_text
     else:
-        return False
+        return '-'

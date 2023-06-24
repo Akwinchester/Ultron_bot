@@ -1,6 +1,6 @@
 import telebot
 from config import BOT_TOKEN, MESSAGE_TEXT, BUTTON_TEXT
-from formation_text_message import select_activity, setting_notification
+from formation_text_message import select_activity, setting_notification, tg_entry_text
 from models.user import create_user, get_user_id, add_friend
 from models.activity import formation_list_activity, add_activity, get_name_activity, delete_activity,\
     update_notification_text, add_address, formation_list_adresses, formation_message_list_adresses, formation_list_chat_id, get_notification_text
@@ -15,6 +15,7 @@ from data_structares import Row, RowFactory
 from datetime import date
 from keyboa import Keyboa
 import re
+
 
 message_id_for_edit = {}
 user_row = {}
@@ -253,7 +254,7 @@ def get_description(message):
     user_row[message.chat.id].set_date_added(date.today())
     bot.delete_message(message.chat.id, message.id)
     bot.delete_message(message.chat.id, message_id_for_edit['description_cskip'])
-    finish_step_add_row(user_row[message.chat.id])
+    finish_step_add_row(user_row[message.chat.id], message)
 
 
 #Обрабатываем пропускание описания
@@ -262,24 +263,28 @@ def callback_inline(call):
     bot.delete_message(call.message.chat.id, call.message.id)
     user_row[call.message.chat.id].set_description('-')
     user_row[call.message.chat.id].set_date_added(date.today())
-    finish_step_add_row(user_row[call.message.chat.id])
+    finish_step_add_row(user_row[call.message.chat.id], call.message)
 
 
 #Этап создания объекта Row и записи данных в БД
-def finish_step_add_row(row_maker):
+def finish_step_add_row(row_maker, message):
     row = row_maker.create_row()
     add_row(row)
-    send_entery(row)
+    send_entery(row, message)
 
 
-def send_entery(data_row:Row):
+def send_entery(data_row:Row, message):
     notification_text = get_notification_text(data_row.activity_id)
+    if notification_text == '-':
+        notification_text = tg_entry_text(data_row)
+
     if '[количество]' in notification_text:
         notification_text = notification_text.replace('[количество]', str(data_row.amount))
     if notification_text:
         list_chat_id = formation_list_chat_id(data_row.activity_id)
         for chat_id in list_chat_id:
             bot.send_message(int(chat_id), notification_text)
+    bot.send_message(message.chat.id, tg_entry_text(data_row) )
 
 
 
