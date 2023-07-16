@@ -39,6 +39,8 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
+    username = Column(String(50), unique=True, nullable=False)
+    password = Column(String(128), nullable=False)
     chat_id = Column(String(50))
     activities = relationship("Activity", secondary=user_activity_table, back_populates="users", cascade='all, delete')
     nick  = Column(String(50), default='')

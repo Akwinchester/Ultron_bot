@@ -183,6 +183,8 @@ def get_nick_new_friend(message, user_id, activity_id):
 
 #Обработка "уведомления"->"получатели"-> "имя_получателя"
 #TODO нужно делать проверку на то, что сообщение нуждается в обновлении. Чтобы не падала ошибка, что старое и новое содержимое идентично
+
+#TODO реализовать удаление адресата из списка
 @bot.callback_query_handler(func=lambda call: re.match(r'activity=[0-9]+_friend=[0-9]+',call.data))
 def list_activity(call):
     friend_id = call.data.split('_')[1].split('=')[1]

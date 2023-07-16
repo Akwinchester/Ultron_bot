@@ -3,7 +3,7 @@ from models.models import User, session
 #Запись в БД
 def create_user(real_name, chat_id, nick):
     if not check_user_exists(chat_id):
-        new_user = User(name=real_name, chat_id=chat_id, nick = nick)
+        new_user = User(name=real_name, chat_id=chat_id, nick = nick, username='', password='')
         session.add(new_user)
         session.commit()
         session.close()
