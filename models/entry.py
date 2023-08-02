@@ -1,5 +1,6 @@
 from models.models import Entry, session
 from data_structares import Row, RowFactory
+from models.activity import get_related_activity_ids
 
 
 
@@ -11,4 +12,13 @@ def add_row(data_row:Row):
     session.commit()
     session.close()
 
+def get_entries_for_activity_ids(activity_id):
+    activity_ids = get_related_activity_ids(activity_id)
+    entries = (
+        session.query(Entry)
+        .filter(Entry.activity_id.in_(activity_ids))
+        .all()
+    )
+
+    return entries
 

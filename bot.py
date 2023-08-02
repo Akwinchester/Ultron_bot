@@ -1,13 +1,10 @@
 import telebot
 from config import BOT_TOKEN, MESSAGE_TEXT, BUTTON_TEXT
-from formation_text_message import select_activity, setting_notification, tg_entry_text
-from models.user import create_user, get_user_id, add_friend
-from models.activity import formation_list_activity, add_activity, get_name_activity, delete_activity,\
-    update_notification_text, add_address, formation_list_adresses, formation_message_list_adresses, formation_list_chat_id, get_notification_text
+from formation_text_message import select_activity, setting_notification, tg_entry_text, list_activity_True
+from models.user import create_user, get_user_id, add_friend, check_user_name_bd, update_user,get_user_name
+from models.activity import *
 
-from keyboards import make_keyboard_start, make_keyboard_main_menu,\
-    make_keyboard_list_activity, make_keyboard_skip_amount,\
-    make_keyboard_skip_description, make_keyboard_setting_activity, make_keyboard_setting_push, make_keyboard_list_friend
+from keyboards import *
 
 from models.entry import add_row
 from data_structares import Row, RowFactory
@@ -15,7 +12,7 @@ from data_structares import Row, RowFactory
 from datetime import date
 from keyboa import Keyboa
 import re
-
+from werkzeug.security import check_password_hash
 
 message_id_for_edit = {}
 user_row = {}
@@ -27,10 +24,61 @@ bot = telebot.TeleBot(BOT_TOKEN, parse_mode='HTML')
 #Приветственное сообщение
 @bot.message_handler(commands=['start'])
 def welcome(message):
-    bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}!!!\n'+MESSAGE_TEXT['start'],
-                     reply_markup=make_keyboard_start())
+    keyboard = make_keyboard_check_registration()
+    bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}!!!\n' + MESSAGE_TEXT['start'],
+                     reply_markup=keyboard())
+    # create_user(call.message.from_user.first_name, call.message.chat.id, call.message.from_user.username)
 
-    create_user(message.from_user.first_name, message.chat.id, message.from_user.username)
+
+#функция удаления сообщений
+def clear_history_message(message, list_key):
+    for key in list_key:
+        if key in message_id_for_edit:
+            bot.delete_message(chat_id=message.chat.id, message_id=message_id_for_edit[key])
+
+#Обработка "Зарегистрирован" or "Не зарегистрирован"
+@bot.callback_query_handler(func=lambda call: re.match(r'check_registration=[0-1]',call.data))
+def list_activity(call):
+    status = call.data.split('=')[1]
+    if status == '1':
+        answer = bot.send_message(call.message.chat.id, MESSAGE_TEXT['authorized'])
+        message_id_for_edit['check_authorization'] = answer.id
+        bot.register_next_step_handler(call.message, check_username)
+
+    elif status == '0':
+        answer = bot.send_message(call.message.chat.id, MESSAGE_TEXT['no_authorized'])
+        message_id_for_edit['check_authorization'] = answer.id
+
+
+#забираем из сообщения username и проверяем есть ли имя пользователя в БД
+def check_username(message):
+    clear_history_message(message, ['check_authorization_True','check_authorization_False','user_name'])
+    message_id_for_edit['user_name'] = message.id
+    user = check_user_name_bd(message.text)
+    if user:
+        answer = bot.send_message(message.chat.id, f'Отлично пользователь с именем {message.text} найден в системе. Отправь следующим сообщением пароль')
+        message_id_for_edit['check_authorization_True'] = answer.id
+        clear_history_message(message, ['check_authorization'])
+        bot.register_next_step_handler(message, check_password, user)
+
+    else:
+        answer = bot.send_message(message.chat.id, 'Сожалею, но пользователь не найден. Проверь написание и отправь сообщение с именем еще раз.')
+        message_id_for_edit['check_authorization_False'] = answer.id
+        bot.register_next_step_handler(message, check_username)
+
+
+#забираем из сообщения пароль и сравниваем с хешем пароля из БД
+def check_password(message, user):
+    clear_history_message(message, ['user_name', 'password_False'])
+
+    if check_password_hash(user.password, message.text):
+        update_user(user_name=user.username, real_name=message.from_user.first_name,
+                    chat_id=message.chat.id, nick=message.from_user.username)
+        bot.send_message(message.chat.id, 'Поздравляю, вы вошли в систему. Ваши аккаунты на сайте и в боте синхронизированы.')
+    else:
+        answer = bot.send_message(message.chat.id, "Увы, пароль неверный. Отправь сообщением верный пароль")
+        message_id_for_edit['password_False'] = answer.id
+        bot.register_next_step_handler(message, check_password, user)
 
 
 #Открытие главного меню
@@ -49,25 +97,84 @@ def return_main_menu(message):
 @bot.message_handler(content_types=['text'], regexp=BUTTON_TEXT['add_row'])
 def add_row_button(message):
     bot.delete_message(message.chat.id, message.id)
-    keyboard = make_keyboard_list_activity(message.chat.id)
-    bot.send_message(message.chat.id, 'Выбери или создай активность', reply_markup=keyboard())
-
+    user_id = get_user_id(message.chat.id)
+    keyboard = make_keyboard_list_activity(user_id, status=1)
+    answer = bot.send_message(message.chat.id, 'Выбери или создай активность', reply_markup=keyboard())
+    message_id_for_edit['add_activity'] = answer.message_id
 
 #Обработка нажатия кнопки добавлене активности "добавить запись"->"+"
 @bot.callback_query_handler(func=lambda call: call.data == 'activity=add_activity')
 def callback_inline(call):
-    answer = bot.send_message(call.message.chat.id, 'отправь название новой активности следующим сообщением')
+    user_id = get_user_id(call.message.chat.id)
+    keyboard = make_keyboard_add_new_or_friend_activity(user_id)
+
+    if 'add_activity' in message_id_for_edit:
+        bot.edit_message_text(list_activity_True(user_id), call.message.chat.id, message_id_for_edit['add_activity'],
+                              reply_markup=keyboard())
+    else:
+        answer = bot.send_message(call.message.chat.id, list_activity_True(user_id), reply_markup=keyboard())
+        message_id_for_edit['add_activity'] = answer.message_id
+
     message_id_for_edit['list_activity'] = call.message.id
+
+
+
+#Обработка нажатия кнопки добавлене активности "добавить запись"->"+"->"имя пользователя"
+@bot.callback_query_handler(func=lambda call: re.match(r'activity=show_list_activity_friend=[0-9]+',call.data))
+def callback_inline(call):
+    print('re')
+    friend_id = call.data.split('=')[2]
+    friend_name = get_user_name(friend_id)
+    keyboard = make_keyboard_list_activity_friend(friend_id)
+    bot.edit_message_text(f'Активности пользователя {friend_name}',  call.message.chat.id, message_id_for_edit['add_activity'], reply_markup=keyboard())
+
+
+#Обработка нажатия кнопки добавлене активности "добавить запись"->"+"->"имя пользователя"->"<<<<"
+@bot.callback_query_handler(func=lambda call: re.match(r'activity=add_friend=[0-9]+_activity=back',call.data))
+def list_activity(call):
+    user_id = get_user_id(call.message.chat.id)
+    keyboard = make_keyboard_list_activity(user_id, status=1)
+    bot.edit_message_text('Выбери или создай активность', call.message.chat.id, call.message.id, reply_markup=keyboard())
+
+
+#Обработка нажатия кнопки добавлене активности "добавить запись"->"+"->"имя пользователя"->"название активности"
+@bot.callback_query_handler(func=lambda call: re.match(r'activity=add_friend=[0-9]+_activity=[0-9]+',call.data))
+def callback_inline(call):
+    user_id = get_user_id(call.message.chat.id)
+    activity_id = call.data.split('=')[3]
+    create_activity_for_template(user_id=user_id, activity_id=activity_id)
+
+
+#Обработка нажатия кнопки добавлене активности "добавить запись"->"+"->"новая активность"
+@bot.callback_query_handler(func=lambda call: call.data == 'activity=create_activity')
+def callback_inline(call):
+    answer = bot.send_message(call.message.chat.id, 'отправь название новой активности следующим сообщением')
     message_id_for_edit['name_activity'] = answer.message_id
     bot.register_next_step_handler(call.message, get_name_new_activity)
+
+
+#Обработка нажатия кнопки добавлене активности "добавить запись"->"+"->"мои активности"
+@bot.callback_query_handler(func=lambda call: call.data == 'activity=my_activity')
+def callback_inline(call):
+    user_id = get_user_id(call.message.chat.id)
+    keyboard = make_keyboard_list_activity_for_change_status(user_id=user_id, status=0)
+    answer = bot.send_message(call.message.chat.id, 'Неактивные активности', reply_markup=keyboard())
+
+
+#Смена статуса активности "добавить запись"->"+"->"мои активности"->"название активности"
+@bot.callback_query_handler(func=lambda call: re.match(r'activity=change_status=[0-9]',call.data))
+def callback_inline(call):
+    activity_id = call.data.split('=')[2]
+    change_status_activity(activity_id)
+
 
 
 #Получение имени новой активности от пользователя из сообщения
 def get_name_new_activity(message):
     chat_id = message.chat.id
     add_activity(chat_id, name_activity=message.text)
-
-    keyboard = make_keyboard_list_activity(chat_id)
+    user_id = get_user_id(message.chat.id)
+    keyboard = make_keyboard_list_activity(user_id, status=1)
     bot.delete_message(chat_id, message.id)
     bot.delete_message(chat_id, message_id_for_edit['name_activity'])
     bot.edit_message_text(text='Выбери или создай активность', message_id=message_id_for_edit['list_activity'],
@@ -90,8 +197,8 @@ def callback_inline(call):
 def callback_inline(call):
     activity_id = call.data.split('=')[0].split('_')[1]
     delete_activity(activity_id)
-
-    keyboard = make_keyboard_list_activity(call.message.chat.id)
+    user_id = get_user_id(call.message.chat.id)
+    keyboard = make_keyboard_list_activity(user_id, status=1)
     bot.edit_message_text('Выбери или создай активность',call.message.chat.id, call.message.id, reply_markup=keyboard())
 
 
@@ -109,9 +216,10 @@ def callback_inline(call):
 
 
 #Обработка "уведомления"->"список активностей" или "имя_активности"->"список активностей"
-@bot.callback_query_handler(func=lambda call: re.match(r'[0-9]+_push=save|activity_[0-9]+=list_activity|activity=[0-9]+_friend=list_activity',call.data))
+@bot.callback_query_handler(func=lambda call: re.match(r'[0-9]+_push=save|activity_[0-9]+=list_activity|activity=[0-9]+_friend=list_activity|activity=change_status=list_activity',call.data))
 def list_activity(call):
-    keyboard = make_keyboard_list_activity(call.message.chat.id)
+    user_id = get_user_id(call.message.chat.id)
+    keyboard = make_keyboard_list_activity(user_id, status=1)
     bot.edit_message_text('Выбери или создай активность', call.message.chat.id, call.message.id, reply_markup=keyboard())
 
 

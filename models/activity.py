@@ -3,13 +3,18 @@ from models.user import get_user_id
 
 
 #Список для формирования кнопок выбора активности [(название_активности, id_активности),]
-def formation_list_activity(chat_id):
-    user_id = get_user_id(chat_id)
-    activity = session.query(Activity).filter_by(user_id=user_id).all()
+def formation_list_activity(user_id, status=None):
+    if user_id is not None and status is not None:
+        activity = session.query(Activity).filter_by(user_id=user_id, status=status).all()
+    else:
+        activity = session.query(Activity).filter_by(user_id=user_id).all()
+
     session.close()
     list_activity = []
+
     for act in activity:
         list_activity.append((act.name, act.id))
+
     return list_activity
 
 
@@ -17,6 +22,26 @@ def formation_list_activity(chat_id):
 def add_activity(chat_id, name_activity):
     user_id = get_user_id(chat_id)
     new_activity = Activity(name=name_activity, user_id=user_id)
+    session.add(new_activity)
+    session.commit()
+    session.close()
+
+
+def create_activity_for_template(activity_id, user_id):
+    # Получаем активность по переданному id
+    template_activity = session.query(Activity).get(activity_id)
+
+    if not template_activity:
+        # Если активность с указанным id не найдена, выбрасываем ошибку или обрабатываем ситуацию по необходимости
+        raise ValueError(f"Activity with id {activity_id} not found")
+
+    # Создаем новую активность
+    new_activity = Activity(name=f"{template_activity.name}", user_id=user_id)
+
+    # Добавляем связь многие ко многим с другой активностью
+    new_activity.related_activities.append(template_activity)
+    template_activity.related_activities.append(new_activity)
+    # Добавляем новую активность в базу данных
     session.add(new_activity)
     session.commit()
     session.close()
@@ -115,3 +140,26 @@ def get_notification_text(activity_id):
         return activity.notification_text
     else:
         return '-'
+
+
+def add_frend_activity_in_my_list():
+    pass
+
+
+def change_status_activity(activity_id):
+    activity = session.get(Activity, activity_id)
+    activity.status = not activity.status
+    session.commit()
+    session.close()
+
+
+def get_related_activity_ids(activity_id):
+    activity = session.get(Activity, activity_id)
+
+    if not activity:
+        return []
+
+    related_ids = [a.id for a in activity.related_activities]
+    related_ids.append(activity_id)
+
+    return related_ids

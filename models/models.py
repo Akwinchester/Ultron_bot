@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Date, Table
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Date, Table, Boolean
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import declarative_base, relationship
 from config import *
@@ -21,7 +21,9 @@ Base = declarative_base()
 # Определение промежуточной таблицы для связи пользователя и активностей. Кто получает уведомления
 user_activity_table = Table('user_activity', Base.metadata,
     Column('user_id', Integer, ForeignKey('user.id', ondelete='CASCADE')),
-    Column('activity_id', Integer, ForeignKey('activity.id', ondelete='CASCADE'))
+    Column('activity_id', Integer, ForeignKey('activity.id', ondelete='CASCADE')),
+    Column('address', Boolean, default=False),
+    Column('add_entery', Boolean, default=False)
 )
 
 
@@ -31,6 +33,11 @@ user_friend_table = Table('user_friend', Base.metadata,
     Column('friend_id', Integer, ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
 )
 
+
+activity_activity_table = Table('activity_activity',Base.metadata,
+                         Column('activity_one_id', Integer,  ForeignKey('activity.id', ondelete='CASCADE'), primary_key=True),
+                         Column('activity_two_id', Integer, ForeignKey('activity.id', ondelete='CASCADE'), primary_key=True),
+                         )
 
 
 # Определение класса-модели для таблицы
@@ -68,7 +75,13 @@ class Activity(Base):
     name = Column(String(50))
     user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
     notification_text = Column(String(500), default='')
-    users = relationship("User", secondary=user_activity_table, back_populates="activities")  # Связь "многие ко многим"
+    status = Column(Boolean, default=True)
+    users = relationship("User", secondary=user_activity_table, back_populates="activities")
+    related_activities = relationship('Activity',
+                                       secondary=activity_activity_table,
+                                       primaryjoin=id == activity_activity_table.c.activity_one_id,
+                                       secondaryjoin=id == activity_activity_table.c.activity_two_id,
+                                       lazy='dynamic')
 
 
 class Entry(Base):

@@ -1,5 +1,5 @@
 from config import MESSAGE_TEXT
-from models.activity import get_name_activity
+from models.activity import get_name_activity, formation_list_activity
 from data_structares import Row
 
 
@@ -49,3 +49,12 @@ def tg_entry_text(row:Row):
 Дата добавления: <b>{row.date_added}</b>
 
 Активность: <b>{get_name_activity(row.activity_id)}</b>'''
+
+
+def list_activity_True(user_id):
+     list_str = ''
+     list_object = formation_list_activity(user_id)
+     for act in list_object:
+          list_str+= act[0] + '\n'
+
+     return f'Здесь ты можешь настраивать список активностей, в которые будешь добавлять записи\n\nАктивные активности:\n{list_str}'
