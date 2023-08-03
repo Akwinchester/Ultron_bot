@@ -142,10 +142,7 @@ def get_notification_text(activity_id):
         return '-'
 
 
-def add_frend_activity_in_my_list():
-    pass
-
-
+#Смена статуса выбранной активности на противоположный
 def change_status_activity(activity_id):
     activity = session.get(Activity, activity_id)
     activity.status = not activity.status
