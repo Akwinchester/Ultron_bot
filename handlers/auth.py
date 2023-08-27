@@ -1,6 +1,6 @@
 from bot_instance import bot, message_id_for_edit
 from handlers.utils import remove_messages
-from models.user import check_user_name_bd, update_user
+from models.user import check_user_name_bd, update_user, create_user
 
 from keyboards import make_keyboard_check_registration
 from config import MESSAGE_TEXT
@@ -20,6 +20,7 @@ def processing_registration_selection(call):
     elif status == '0':
         answer = bot.send_message(call.message.chat.id, MESSAGE_TEXT['no_authorized'])
         message_id_for_edit['check_authorization'] = answer.id
+        create_user(real_name=call.message.from_user.first_name, nick=call.message.from_user.username, chat_id=call.message.chat.id)
 
 
 # Забираем из сообщения username и проверяем есть ли имя пользователя в БД
