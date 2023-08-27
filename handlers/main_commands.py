@@ -1,6 +1,7 @@
 from bot_instance import bot
 from keyboards import make_keyboard_check_registration, make_keyboard_main_menu
 from config import MESSAGE_TEXT, BUTTON_TEXT
+from models.user import create_user
 
 
 # Приветственное сообщение с клавиатурой: "Зарегистрирован" or "Не зарегистрирован"
