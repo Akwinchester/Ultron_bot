@@ -15,8 +15,7 @@ from handlers.friends import add_friend_by_nick, setting_recipient_list, add_fri
 
 from handlers.notifications import open_notifications_settings, start_setting_notification_text
 
-from handlers.entry import start_add_entry, request_amount_input, skip_amount_input,\
-    request_description_input, skip_description
+from handlers.entry import start_add_entry,  skip_amount_input, skip_description
 
 # Обработчик коллбэков без явного соответствия
 @bot.callback_query_handler(func=lambda call: True)

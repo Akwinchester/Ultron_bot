@@ -20,6 +20,7 @@ def processing_registration_selection(call):
     elif status == '0':
         answer = bot.send_message(call.message.chat.id, MESSAGE_TEXT['no_authorized'])
         message_id_for_edit['check_authorization'] = answer.id
+        create_user(message.from_user.first_name, message.chat.id, message.from_user.username)
 
 
 # Забираем из сообщения username и проверяем есть ли имя пользователя в БД

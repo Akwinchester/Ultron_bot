@@ -16,26 +16,29 @@ def start_add_entry(call):
     user_row[chat_id].set_activity_id(activity_id)
     keyboard = make_keyboard_skip_amount()
     bot.send_message(chat_id, 'Можешь указать количественную характеристику', reply_markup=keyboard())
-
-
-# Запрос на ввод количественного значения
-@bot.callback_query_handler(func=lambda call: re.match(r'amount=continue',call.data))
-def request_amount_input(call):
-    bot.delete_message(call.message.chat.id, call.message.id)
-    answer = bot.send_message(call.message.chat.id, 'Отправь количество следующим сообщением')
-    message_id_for_edit['amount_continue'] = answer.id
     bot.register_next_step_handler(call.message, get_amount)
+
+
+# # Запрос на ввод количественного значения
+# @bot.callback_query_handler(func=lambda call: re.match(r'amount=continue',call.data))
+# def request_amount_input(call):
+#     bot.delete_message(call.message.chat.id, call.message.id)
+#     answer = bot.send_message(call.message.chat.id, 'Отправь количество следующим сообщением')
+#     message_id_for_edit['amount_continue'] = answer.id
+#     bot.register_next_step_handler(call.message, get_amount)
+
 
 
 #Получение количественной характеристики от пользователя из сообщения
 def get_amount(message):
     user_row[message.chat.id].set_amount(int(message.text))
-    bot.delete_message(chat_id=message.chat.id, message_id=message_id_for_edit['amount_continue'])
+    # bot.delete_message(chat_id=message.chat.id, message_id=message_id_for_edit['amount_continue'])
     bot.delete_message(message.chat.id, message.id)
 
     keyboard = make_keyboard_skip_description()
     answer = bot.send_message(message.chat.id, 'Можешь добавить описание', reply_markup=keyboard())
     message_id_for_edit['description_cskip'] = answer.id
+    bot.register_next_step_handler(call.message, get_description)
 
 
 # Пропускаем ввод количественной характеристики
@@ -46,17 +49,18 @@ def skip_amount_input(call):
     user_row[call.message.chat.id].set_amount(0)
     keyboard = make_keyboard_skip_description()
     bot.send_message(call.message.chat.id, 'Можешь добавить описание', reply_markup=keyboard())
-
-
-
-# Запрос на ввод описания записи
-@bot.callback_query_handler(func=lambda call: re.match(r'description=continue',call.data))
-def request_description_input(call):
-    answer = bot.send_message(call.message.chat.id, 'Отправь описание следующим сообщением')
-    message_id_for_edit['description_cskip'] = answer.id
-
-    bot.delete_message(call.message.chat.id, call.message.id)
     bot.register_next_step_handler(call.message, get_description)
+
+
+
+# # Запрос на ввод описания записи
+# @bot.callback_query_handler(func=lambda call: re.match(r'description=continue',call.data))
+# def request_description_input(call):
+#     answer = bot.send_message(call.message.chat.id, 'Отправь описание следующим сообщением')
+#     message_id_for_edit['description_cskip'] = answer.id
+#
+#     bot.delete_message(call.message.chat.id, call.message.id)
+#     bot.register_next_step_handler(call.message, get_description)
 
 
 #Получение описания от пользователя из сообщения

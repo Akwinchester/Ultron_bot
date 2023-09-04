@@ -50,13 +50,15 @@ def make_keyboard_list_activity_for_change_status(user_id, status):
 
 
 def make_keyboard_skip_amount():
-    items=[('Пропустить', 'skip'), ('Указать', 'continue')]
+    # items=[('Пропустить', 'skip'), ('Указать', 'continue')]
+    items=[('Пропустить', 'skip')]
     keyboard = Keyboa(items=items, items_in_row=2, front_marker='amount=')
     return keyboard
 
 
 def make_keyboard_skip_description():
-    items=[('Пропустить', 'skip'), ('Указать', 'continue')]
+    # items=[('Пропустить', 'skip'), ('Указать', 'continue')]
+    items = [('Пропустить', 'skip')]
     keyboard = Keyboa(items=items, items_in_row=2, front_marker='description=')
     return keyboard
 
