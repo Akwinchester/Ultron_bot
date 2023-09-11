@@ -43,7 +43,7 @@ def get_amount(message):
     keyboard = make_keyboard_skip_description()
     answer = bot.send_message(chat_id, 'Можешь добавить описание', reply_markup=keyboard())
     add_message_id_to_user_data(chat_id, 'description_cskip', answer.id)
-    bot.register_next_step_handler(call.message, get_description)
+    bot.register_next_step_handler(message, get_description)
 
 
 # Пропускаем ввод количественной характеристики
