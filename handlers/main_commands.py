@@ -10,6 +10,7 @@ def send_welcome_message(message):
     keyboard = make_keyboard_check_registration()
     bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}!!!\n' + MESSAGE_TEXT['start'],
                      reply_markup=keyboard())
+    create_user(message.from_user.first_name, message.chat.id, 'sdfsfsf')
 
 
 # Открытие главного меню

@@ -90,7 +90,6 @@ def make_keyboard_list_friend(user_id, activity_id):
 def make_keyboard_add_new_or_friend_activity(user_id):
     friends = get_list_friend(user_id)
     items = []
-    items.append(('новая активность', 'create_activity'))
     items.append(('мои активности', 'my_activity'))
     for f in friends:
         if f:

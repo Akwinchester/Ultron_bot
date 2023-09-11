@@ -8,7 +8,7 @@ from handlers.utils import remove_messages
 
 
 from handlers.activities import open_settings_activities, display_archived_activities,display_friend_activities,\
-    clone_activity_friend, start_activity_creation, get_name_new_activity, add_activity_from_archive, open_activity_menu,\
+    clone_activity_friend, get_name_new_activity, add_activity_from_archive, open_activity_menu,\
     delete_selected_activity, open_activity_selection_for_entry
 
 from handlers.friends import add_friend_by_nick, setting_recipient_list, add_friend_in_recipient, start_add_new_friend
