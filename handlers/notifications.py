@@ -12,6 +12,7 @@ from data_structares import Row
 
 from handlers.utils import  add_message_id_to_user_data
 
+
 #Обраотка нажатия на кнопку: "уведомления" из (удалить активность, уведомления, продолжить)
 # Переход к настройке уведомлений выбранной активности
 @bot.callback_query_handler(func=lambda call: re.match(r'activity_[0-9]+=push',call.data))
@@ -20,6 +21,7 @@ def open_notifications_settings(call):
     activity_name = get_name_activity(call.data.split('=')[0].split('_')[1])
     activity_id = call.data.split('=')[0].split('_')[1]
     add_message_id_to_user_data(chat_id, 'activity_settings_menu', call.message.id)
+    keyboard = make_keyboard_setting_push(activity_id)
 
     # TODO: сделать формирование текстового сообщения
     bot.edit_message_text(setting_notification(activity_id),
