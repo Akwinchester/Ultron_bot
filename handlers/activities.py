@@ -25,9 +25,8 @@ def open_settings_activities(call):
     else:
         answer = bot.send_message(chat_id, list_activity_True(user_id), reply_markup=keyboard())
         add_message_id_to_user_data(chat_id,'add_activity',answer.message_id)
-        print(message_id_for_edit[chat_id]['add_activity'])
         add_message_id_to_user_data(chat_id, 'list_activity', call.message.id)
-    bot.register_next_step_handler(call.message, get_name_new_activity, message_id_for_edit[chat_id]['add_activity'])
+    bot.register_next_step_handler(call.message, get_name_new_activity)
 
 
 # Обработка нажатия кнопки добавлене активности "добавить запись"->"+"->"имя пользователя".
@@ -35,10 +34,11 @@ def open_settings_activities(call):
 @bot.callback_query_handler(func=lambda call: re.match(r'activity=show_list_activity_friend=[0-9]+',call.data))
 def display_friend_activities(call):
     chat_id = call.message.chat.id
+    bot.clear_step_handler_by_chat_id(chat_id)
     friend_id = call.data.split('=')[2]
     friend_name = get_user_name(friend_id)
     keyboard = make_keyboard_list_activity_friend(friend_id)
-    bot.edit_message_text(f'Активности пользователя {friend_name}',  call.message.chat.id, message_id_for_edit[chat_id]['add_activity'], reply_markup=keyboard())
+    bot.edit_message_text(f'Активности пользователя {friend_name}',  chat_id, message_id_for_edit[chat_id]['add_activity'], reply_markup=keyboard())
 
 
 # Обработка нажатия кнопки добавлене активности "добавить запись"->"+"->"имя пользователя"->"название активности".
@@ -62,7 +62,7 @@ def clone_activity_friend(call):
 
 #Получение имени новой активности от пользователя из сообщения
 #Создание активности из полученного имени активности
-def get_name_new_activity(message, for_delete):
+def get_name_new_activity(message):
     chat_id = message.chat.id
     add_activity(chat_id, name_activity=message.text)
     user_id = get_user_id(message.chat.id)
@@ -70,9 +70,10 @@ def get_name_new_activity(message, for_delete):
     #Todo заменить на remove_messages
 
     bot.delete_message(chat_id, message.id)
-    bot.delete_message(chat_id, for_delete)
-    remove_messages(chat_id, ['add_activity'])
-    bot.send_message(chat_id, 'Выбери или создай активность', reply_markup=keyboard())
+    # bot.delete_message(chat_id, message_id_for_edit[chat_id]['add_activity'])
+    bot.edit_message_text(text='Выбери или создай активность', chat_id=chat_id, message_id=message_id_for_edit[chat_id]['add_activity'], reply_markup=keyboard())
+    # remove_messages(chat_id, ['add_activity'])
+    # bot.send_message(chat_id, 'Выбери или создай активность', reply_markup=keyboard())
 
 
     # bot.edit_message_text(text='Выбери или создай активность', message_id=message_id_for_edit[chat_id]['list_activity'],
@@ -84,9 +85,14 @@ def get_name_new_activity(message, for_delete):
 # Отображение неактивных активностей пользователя
 @bot.callback_query_handler(func=lambda call: call.data == 'activity=my_activity')
 def display_archived_activities(call):
-    user_id = get_user_id(call.message.chat.id)
+    chat_id = call.message.chat.id
+    bot.clear_step_handler_by_chat_id(chat_id)
+    user_id = get_user_id(chat_id)
     keyboard = make_keyboard_list_activity_for_change_status(user_id=user_id, status=0)
-    answer = bot.send_message(call.message.chat.id, 'Неактивные активности', reply_markup=keyboard())
+    bot.edit_message_text(f'Неактивные активности', chat_id,
+                          message_id_for_edit[chat_id]['add_activity'], reply_markup=keyboard())
+
+    # answer = bot.send_message(call.message.chat.id, 'Неактивные активности', reply_markup=keyboard())
 
 
 # Смена статуса активности "добавить запись"->"+"->"мои активности"->"название активности"
@@ -112,11 +118,11 @@ def open_activity_menu(call):
 # Обработка: "имя_активности"->"список активностей"
 # Обработка: "добавить запись"->"+"->"имя пользователя"->"<<<<".
 # Возврат к списку актуальных активностей из позиций: список активностей друга, настройка уведомления, меню выбранной активности
-@bot.callback_query_handler(func=lambda call: re.match(r'[0-9]+_push=save|activity_[0-9]+=list_activity|activity=[0-9]+_friend=list_activity|activity=change_status=list_activity|activity=add_friend=[0-9]+_activity=back',call.data))
+@bot.callback_query_handler(func=lambda call: re.match(r'.*=list_activity$',call.data))
 def back_to_current_activities(call):
     user_id = get_user_id(call.message.chat.id)
     keyboard = make_keyboard_list_activity(user_id, status=1)
-    # bot.edit_message_text('Выбери или создай активность', call.message.chat.id, call.message.id, reply_markup=keyboard())
+    bot.edit_message_text('Выбери или создай активность', call.message.chat.id, call.message.id, reply_markup=keyboard())
 
 
 # Обработка нажатия на кнопку: "Добавить запись"->"имя_активности"->"Удалить активность"

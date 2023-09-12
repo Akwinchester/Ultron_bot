@@ -13,6 +13,8 @@ def send_welcome_message(message):
 
 
 
+
+
 # Открытие главного меню
 @bot.message_handler(content_types=['text'], regexp=BUTTON_TEXT['start'])
 def open_main_menu(message):

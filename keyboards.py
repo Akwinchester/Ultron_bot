@@ -42,7 +42,6 @@ def make_keyboard_list_activity(user_id, status):
 
 
 def make_keyboard_list_activity_for_change_status(user_id, status):
-    print(formation_list_activity(user_id, status))
     items = formation_list_activity(user_id, status)
     items.append(('Список активностей','list_activity'))
     keyboard = Keyboa(items=items, items_in_row=2, front_marker='activity=change_status=')
@@ -70,7 +69,7 @@ def make_keyboard_setting_activity(activity_id):
 
 
 def make_keyboard_setting_push(activity_id):
-    items = [('Текст уведомления', 'text'), ('Получатели', 'addresses'), ('Список активностей', 'save')]
+    items = [('Текст уведомления', 'text'), ('Получатели', 'addresses'), ('Список активностей', 'list_activity')]
     keyboard = Keyboa(items=items, items_in_row=2, front_marker=f'{activity_id}_push=')
     return keyboard
 
@@ -81,7 +80,7 @@ def make_keyboard_list_friend(user_id, activity_id):
     for f in friends:
         if f:
             items.append((f.name, f.id))
-    items.append(('список активностей', 'list_activity'))
+    items.append(('Список активностей', 'list_activity'))
     items.append(('+', 'add_friend'))
     keyboard = Keyboa(items=items, items_in_row=2, front_marker=f'activity={activity_id}_friend=')
     return keyboard
@@ -100,6 +99,6 @@ def make_keyboard_add_new_or_friend_activity(user_id):
 
 def make_keyboard_list_activity_friend(friend_id):
     items = formation_list_activity(friend_id)
-    items.append(('<<<<<', 'back'))
+    items.append(('<<<<<', 'list_activity'))
     keyboard = Keyboa(items=items, items_in_row=2, front_marker=f'activity=add_friend={friend_id}_activity=')
     return keyboard
