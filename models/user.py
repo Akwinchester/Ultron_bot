@@ -1,4 +1,5 @@
 from models.models import User, session
+from logger import logger
 
 #Запись в БД
 def create_user(real_name, chat_id, nick):
@@ -37,7 +38,7 @@ def get_list_friend(user_id):
         friends = user.friends
         return friends
     else:
-        print("Пользователь не найден")
+        logger.info('Пользователь не найден')
 
 
 def add_friend(user_id, nick):
@@ -61,11 +62,10 @@ def check_user_name_bd(username):
 def update_user(user_name, real_name, chat_id, nick):
     if not check_user_exists(chat_id):
         user = session.query(User).filter(User.username == user_name).first()
-        print(user, user_name)
         user.chat_id = chat_id
         user.nick = nick
         user.name = real_name
         session.commit()
         session.close()
     else:
-        print('chat_id уже есть в базе')
+        logger.info('chat_id уже есть в базе')

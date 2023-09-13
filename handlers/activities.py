@@ -50,16 +50,6 @@ def clone_activity_friend(call):
     create_activity_for_template(user_id=user_id, activity_id=activity_id)
 
 
-# Обработка нажатия кнопки добавлене активности "добавить запись"->"+"->"новая активность"
-# Запрос на ввод названия и старт создания новой активности
-# @bot.callback_query_handler(func=lambda call: call.data == 'activity=create_activity')
-# def start_activity_creation(call):
-#     chat_id = call.message.chat.id
-#     answer = bot.send_message(chat_id, 'отправь название новой активности следующим сообщением')
-#     add_message_id_to_user_data(chat_id, 'name_activity', answer.message_id)
-#     bot.register_next_step_handler(call.message, get_name_new_activity)
-
-
 #Получение имени новой активности от пользователя из сообщения
 #Создание активности из полученного имени активности
 def get_name_new_activity(message):
@@ -70,15 +60,7 @@ def get_name_new_activity(message):
     #Todo заменить на remove_messages
 
     bot.delete_message(chat_id, message.id)
-    # bot.delete_message(chat_id, message_id_for_edit[chat_id]['add_activity'])
     bot.edit_message_text(text='Выбери или создай активность', chat_id=chat_id, message_id=message_id_for_edit[chat_id]['add_activity'], reply_markup=keyboard())
-    # remove_messages(chat_id, ['add_activity'])
-    # bot.send_message(chat_id, 'Выбери или создай активность', reply_markup=keyboard())
-
-
-    # bot.edit_message_text(text='Выбери или создай активность', message_id=message_id_for_edit[chat_id]['list_activity'],
-    #                       chat_id=message.chat.id,
-    #                       reply_markup=keyboard())
 
 
 # Обработка нажатия кнопки добавлене активности "добавить запись"->"+"->"мои активности"
@@ -91,8 +73,6 @@ def display_archived_activities(call):
     keyboard = make_keyboard_list_activity_for_change_status(user_id=user_id, status=0)
     bot.edit_message_text(f'Неактивные активности', chat_id,
                           message_id_for_edit[chat_id]['add_activity'], reply_markup=keyboard())
-
-    # answer = bot.send_message(call.message.chat.id, 'Неактивные активности', reply_markup=keyboard())
 
 
 # Смена статуса активности "добавить запись"->"+"->"мои активности"->"название активности"

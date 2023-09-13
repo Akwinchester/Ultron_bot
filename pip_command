@@ -1,5 +1,0 @@
-pip install SQLAlchemy
-pip install alembic
-pip install mysql-connector-python
-pip install pyTelegramBotAPI
-pip install keyboa
