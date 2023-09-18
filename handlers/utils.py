@@ -4,7 +4,7 @@ import json
 # Функция удаление сообщений бота и пользователя по идентификаторам
 def remove_messages(chat_id, list_key:list):
     for key in list_key:
-        if key in message_id_for_edit:
+        if key in message_id_for_edit[chat_id]:
             try:
                 bot.delete_message(chat_id=chat_id, message_id=message_id_for_edit[chat_id][key])
                 del message_id_for_edit[chat_id][key]

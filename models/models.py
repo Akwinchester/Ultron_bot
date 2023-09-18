@@ -3,7 +3,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import declarative_base, relationship
 from config import *
 from datetime import date
-
+from functools import wraps
+from logger import logger
 
 # Создание подключения к базе данных
 engine = create_engine(f'mysql+mysqlconnector://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}')
@@ -63,9 +64,15 @@ class User(Base):
             friend.friends.append(self)
 
     def remove_friend(self, friend):
+
         if friend in self.friends:
-            self.friends.remove(friend)
+            for activity in friend.activities:
+                activity.users.remove(friend)
             friend.friends.remove(self)
+            self.friends.remove(friend)
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 class Activity(Base):
@@ -92,3 +99,20 @@ class Entry(Base):
     amount = Column(Integer)
     description = Column(String(300), default='')
     date_added = Column(Date, default=date.today())
+
+
+
+def session_scope(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        session = Session()  # Создаем новую сессию
+        try:
+            result = func(session, *args, **kwargs)  # Передаем сессию как первый аргумент вашей функции
+            session.commit()
+            return result
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+    return wrapper

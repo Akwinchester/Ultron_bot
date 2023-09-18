@@ -1,5 +1,6 @@
 from config import MESSAGE_TEXT
 from models.activity import get_name_activity, formation_list_activity
+from models.user import get_list_friend
 from data_structares import Row
 
 
@@ -58,3 +59,11 @@ def list_activity_True(user_id):
           list_str+= act[0] + '\n'
 
      return f'Здесь ты можешь настраивать список активностей, в которые будешь добавлять записи\n\nАктивные активности:\n{list_str}'
+
+
+def list_name_friends(user_id):
+     list_friends = get_list_friend(user_id)
+     text_list_name_friend = '<b>Ваши друзья:</b>\n'
+     for f in list_friends:
+          text_list_name_friend += '- ' + f['name'] + '\n'
+     return text_list_name_friend

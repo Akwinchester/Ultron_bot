@@ -2,7 +2,7 @@ from bot_instance import bot, message_id_for_edit
 
 from handlers.auth import processing_registration_selection, get_and_check_username, get_and_check_password
 
-from handlers.main_commands import send_welcome_message, open_main_menu, handle_cancel_button
+from handlers.main_commands import send_welcome_message, open_main_menu, handle_cancel_button, close_windows
 
 from handlers.utils import remove_messages
 
@@ -11,7 +11,9 @@ from handlers.activities import open_settings_activities, display_archived_activ
     clone_activity_friend, get_name_new_activity, add_activity_from_archive, open_activity_menu,\
     delete_selected_activity, open_activity_selection_for_entry
 
-from handlers.friends import add_friend_by_nick, setting_recipient_list, add_friend_in_recipient, start_add_new_friend
+from handlers.friends import add_friend_by_nick,  start_add_new_friend
+
+from handlers.addressees import setting_recipient_list, toggle_friend_in_recipient_handler
 
 from handlers.notifications import open_notifications_settings, start_setting_notification_text
 

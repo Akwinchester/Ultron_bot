@@ -1,71 +1,85 @@
-from models.models import User, session
+from models.models import User, session_scope
 from logger import logger
+from sqlalchemy.orm import joinedload
 
-#Запись в БД
-def create_user(real_name, chat_id, nick):
+
+@session_scope
+def create_user(session, real_name, chat_id, nick):
     if not check_user_exists(chat_id):
-        new_user = User(name=real_name, chat_id=chat_id, nick = nick, username='', password='')
+        new_user = User(name=real_name, chat_id=chat_id, nick=nick, username='', password='')
         session.add(new_user)
-        session.commit()
-        session.close()
 
 
-#Проеверка наличия пользователя с таким chat_id
-def check_user_exists(chat_id):
+@session_scope
+def check_user_exists(session, chat_id):
     user = session.query(User).filter_by(chat_id=chat_id).one_or_none()
-    return user is not None
+    return True is not None
 
 
-#Получение user_id по chat_id
-def get_user_id(chat_id):
+@session_scope
+def get_user_id(session, chat_id):
     user = session.query(User).filter_by(chat_id=chat_id).first()
     if user:
-        user_id = user.id
-        return user_id
+        return user.id
     else:
-        print('chat_id нет в базе')
+        logger.info('chat_id нет в базе')
         return 1
 
-def get_user_name(user_id):
-    user_name = session.get(User, user_id).name
-    return user_name
+
+@session_scope
+def get_user_name(session, user_id):
+    return session.get(User, user_id).name
 
 
-def get_list_friend(user_id):
-    user = session.get(User, user_id)  # Получение объекта пользователя по ID
-
+@session_scope
+def get_list_friend(session, user_id):
+    user = session.get(User, user_id)
     if user:
         friends = user.friends
-        return friends
+        friens_list = []
+        for f in friends:
+            friens_list.append(f.as_dict())
+        return friens_list
     else:
-        logger.info('Пользователь не найден')
+        return None
 
 
-def add_friend(user_id, nick):
+@session_scope
+def add_friend(session, user_id, nick):
     user = session.get(User, user_id)
-    friend = session.query(User).filter(User.nick==nick).first()
+    friend = session.query(User).filter(User.nick == nick).first()
 
-    if user and friend and not friend in user.friends:
+    if user and friend and friend not in user.friends:
         user.add_friend(friend)
-        session.commit()
-        session.close()
         return True
-    session.close()
     return False
 
 
-def check_user_name_bd(username):
-    user = session.query(User).filter(User.username==username).first()
-    return user
+@session_scope
+def remove_friend(session, user_id, friend_id):
+    user = session.get(User, user_id)
+    friend = session.get(User, friend_id)
+    logger.debug(user_id)
+    logger.debug(friend_id)
+
+    if user and friend:
+        user.remove_friend(friend)
+        return True
+    return False
+
+@session_scope
+def check_user_name_bd(session, username):
+    user = session.query(User).filter(User.username == username).first()
+    user_data = {'user_name':user.username, 'password':user.password}
+    return user_data
 
 
-def update_user(user_name, real_name, chat_id, nick):
+@session_scope
+def update_user(session, user_name, real_name, chat_id, nick):
     if not check_user_exists(chat_id):
         user = session.query(User).filter(User.username == user_name).first()
         user.chat_id = chat_id
         user.nick = nick
         user.name = real_name
-        session.commit()
-        session.close()
     else:
         logger.info('chat_id уже есть в базе')

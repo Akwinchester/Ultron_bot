@@ -79,14 +79,13 @@ def make_keyboard_list_friend(user_id, activity_id):
     items = []
     for f in friends:
         if f:
-            items.append((f.name, f.id))
+            items.append((f['name'], f['id']))
     items.append(('Список активностей', 'list_activity'))
     items.append(('❌', 'close_window'))
 
     if activity_id==None:
         keyboard = Keyboa(items=items, items_in_row=2, front_marker=f'list_friends_{user_id}=')
     else:
-        items.append(('+', 'add_friend'))
         keyboard = Keyboa(items=items, items_in_row=2, front_marker=f'activity={activity_id}_friend=')
     return keyboard
 
@@ -94,12 +93,12 @@ def make_keyboard_list_friend(user_id, activity_id):
 def make_keyboard_add_new_or_friend_activity(user_id):
     friends = get_list_friend(user_id)
     items = []
-    items.append(('<<<<<', 'list_activity'))
+    items.append(('🔙', 'list_activity'))
     items.append(('мои активности', 'my_activity'))
 
     for f in friends:
         if f:
-            items.append((f.name, 'show_list_activity_friend='+ str(f.id)))
+            items.append((f['name'], 'show_list_activity_friend='+ str(f['id'])))
     items.append(('❌', 'close_window'))
     keyboard = Keyboa(items=items, items_in_row=2, front_marker=f'activity=')
     return keyboard
@@ -107,7 +106,7 @@ def make_keyboard_add_new_or_friend_activity(user_id):
 
 def make_keyboard_list_activity_friend(friend_id):
     items = formation_list_activity(friend_id)
-    items.append(('<<<<<', 'list_activity'))
+    items.append(('🔙', 'list_activity'))
     items.append(('❌', 'close_window'))
     keyboard = Keyboa(items=items, items_in_row=2, front_marker=f'activity=add_friend={friend_id}_activity=')
     return keyboard
