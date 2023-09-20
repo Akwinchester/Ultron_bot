@@ -118,7 +118,7 @@ def formation_message_list_adresses(list_adresess:list):
 
 def formation_list_chat_id(activity_id):
     list_adresess = formation_list_adresses(activity_id)
-    return [ad.chat_id for ad in list_adresess]
+    return [ad['chat_id'] for ad in list_adresess]
 
 @session_scope
 def get_notification_text(session, activity_id):
