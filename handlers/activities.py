@@ -45,9 +45,14 @@ def display_friend_activities(call):
 # Создание дубликата активности по шаблону активности друга, для возможности участвовать в соревновании по данной активности.
 @bot.callback_query_handler(func=lambda call: re.match(r'activity=add_friend=[0-9]+_activity=[0-9]+',call.data))
 def clone_activity_friend(call):
-    user_id = get_user_id(call.message.chat.id)
+    chat_id = call.message.chat.id
+    user_id = get_user_id(chat_id)
     activity_id = call.data.split('=')[3]
     create_activity_for_template(user_id=user_id, activity_id=activity_id)
+    keyboard = make_keyboard_add_new_or_friend_activity(user_id)
+    bot.edit_message_text(list_activity_True(user_id), call.message.chat.id,
+                          message_id_for_edit[chat_id]['add_activity'],
+                          reply_markup=keyboard())
 
 
 #Получение имени новой активности от пользователя из сообщения

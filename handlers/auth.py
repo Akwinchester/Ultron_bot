@@ -24,7 +24,7 @@ def processing_registration_selection(call):
     elif status == '0':
         answer = bot.send_message(chat_id, MESSAGE_TEXT['no_authorized'])
         add_message_id_to_user_data(chat_id, 'check_authorization', answer.id)
-        create_user(message.from_user.first_name, chat_id, message.from_user.username)
+        create_user(call.message.from_user.first_name, chat_id, call.message.from_user.username)
 
         logger.info(f'Пользователь: {chat_id} нажал инлайн кнопку "неавторизован"')
 

@@ -3,6 +3,7 @@ import re
 from data_structares import Row, RowFactory
 from keyboards import make_keyboard_skip_amount, make_keyboard_skip_description
 from models.entry import add_row
+from models.user import get_user_name, get_user_id
 from handlers.notifications import send_notifications
 from datetime import date
 from handlers.utils import add_message_id_to_user_data
@@ -17,6 +18,7 @@ def start_add_entry(call):
     bot.delete_message(chat_id, message_id_for_edit[chat_id]['list_activity'])
     user_row[chat_id] = RowFactory()
     user_row[chat_id].set_activity_id(activity_id)
+    user_row[chat_id].set_user_name(get_user_name(get_user_id(chat_id)))
     keyboard = make_keyboard_skip_amount()
     answer = bot.send_message(chat_id, 'Можешь указать количественную характеристику', reply_markup=keyboard())
     add_message_id_to_user_data(chat_id, 'get_amount', answer.id)

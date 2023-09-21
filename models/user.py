@@ -76,10 +76,11 @@ def check_user_name_bd(session, username):
 
 @session_scope
 def update_user(session, user_name, real_name, chat_id, nick):
-    if not check_user_exists(chat_id):
+    if check_user_exists(chat_id):
         user = session.query(User).filter(User.username == user_name).first()
         user.chat_id = chat_id
         user.nick = nick
         user.name = real_name
     else:
+
         logger.info('chat_id уже есть в базе')

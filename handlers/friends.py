@@ -15,7 +15,8 @@ def open_main_menu(message):
     user_id = get_user_id(chat_id)
     keyboard = make_keyboard_add_remove_friend()
     bot.delete_message(chat_id, message.id)
-    bot.send_message(chat_id, list_name_friends(user_id), reply_markup=keyboard())
+    answer = bot.send_message(chat_id, list_name_friends(user_id), reply_markup=keyboard())
+    add_message_id_to_user_data(chat_id, 'list_friend_after_remove', answer.id)
 
 
 # Забираю ник из сообщения от пользователя
@@ -23,6 +24,7 @@ def open_main_menu(message):
 #Todo вынести текстовые сообщения в config.py
 def add_friend_by_nick(message, user_id, activity_id):
     chat_id = message.chat.id
+
     nick = get_nick(message.text)
     flug = add_friend(user_id, nick=nick)
     bot.delete_message(chat_id, message.id)
@@ -30,12 +32,7 @@ def add_friend_by_nick(message, user_id, activity_id):
 
     if flug:
         keyboard = make_keyboard_add_remove_friend()
-        #ломается потому что нет ключа
-        # bot.edit_message_text(chat_id, message_id_for_edit['list_friend_after_remove'], list_name_friends(user_id), reply_markup=keyboard())
-
-        # keyboard = make_keyboard_list_friend(user_id, activity_id)
-        # bot.edit_message_text(formation_message_list_adresses(formation_list_adresses(activity_id)), chat_id,
-        #                       message_id_for_edit[chat_id]['list_friend'], reply_markup=keyboard())
+        bot.edit_message_text(chat_id=chat_id, message_id=message_id_for_edit[chat_id]['list_friend_after_remove'], text=list_name_friends(user_id), reply_markup=keyboard())
 
         if 'error_add_new_friend' in message_id_for_edit[chat_id]:
             bot.delete_message(chat_id, message_id_for_edit[chat_id]['error_add_new_friend'])

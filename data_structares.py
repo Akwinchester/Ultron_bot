@@ -9,6 +9,7 @@ class Row:
     activity_id: int
     amount: int
     description: str
+    user_name: str
 
 
 #Фабрика собирающая объект класса Row
@@ -27,6 +28,9 @@ class RowFactory:
 
     def set_description(self, description: str):
         self.data['description'] = description
+
+    def set_user_name(self, user_name: str):
+        self.data['user_name'] = user_name
 
     def create_row(self) -> Row:
         return Row(**self.data)
